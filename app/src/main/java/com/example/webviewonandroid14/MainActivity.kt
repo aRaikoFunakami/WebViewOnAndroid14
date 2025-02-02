@@ -1,47 +1,91 @@
 package com.example.webviewonandroid14
 
+import android.annotation.SuppressLint
 import android.os.Bundle
+import android.webkit.WebChromeClient
+import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.viewinterop.AndroidView
 import com.example.webviewonandroid14.ui.theme.WebViewOnAndroid14Theme
 
 class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
         setContent {
             WebViewOnAndroid14Theme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                Scaffold(
+                    modifier = Modifier.fillMaxSize()
+                ) { innerPadding ->
+                    // WebViewを埋め込むComposable
+                    YoutubeIFrameWebView()
                 }
             }
         }
     }
 }
 
+@SuppressLint("SetJavaScriptEnabled")
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+fun YoutubeIFrameWebView() {
+    // YouTube の iframe を埋め込んだシンプルなHTML
+    val youtubeHtml = """
+        <html>
+            <head>
+                <style>
+                    html, body {
+                        margin: 0;
+                        padding: 0;
+                        overflow: hidden;
+                    }
+                    iframe {
+                        width: 100%;
+                        border: none;
+                    }
+                </style>
+                <script>
+                    function adjustIframeHeight() {
+                        let viewportHeight = window.innerHeight;
+                        document.getElementById("myIframe").style.height = viewportHeight + "px";
+                    }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    WebViewOnAndroid14Theme {
-        Greeting("Android")
-    }
+                    window.onload = adjustIframeHeight;
+                    window.onresize = adjustIframeHeight; // ウィンドウサイズ変更時も調整
+                </script>
+            </head>
+            <body>
+                <iframe id="myIframe" src="https://www.youtube.com/embed/6n7KpRXgNFE?autoplay=1&enablejsapi=1" allowfullscreen></iframe>
+            </body>
+        </html>
+    """.trimIndent()
+
+    AndroidView(
+        factory = { context ->
+            WebView(context).apply {
+                // WebViewの設定
+                settings.javaScriptEnabled = true
+                settings.domStorageEnabled = true
+                settings.mediaPlaybackRequiresUserGesture = false
+                settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+
+                // YouTubeフルスクリーン対応やJSエラーを回避するためWebChromeClientを設定
+                webChromeClient = WebChromeClient()
+                // 外部ブラウザに飛ばさないようにする
+                webViewClient = WebViewClient()
+
+                // 上記のiframeを含むHTMLを読み込む
+                loadDataWithBaseURL(null, youtubeHtml, "text/html", "UTF-8", null)
+            }
+        },
+        modifier = Modifier.fillMaxSize()
+    )
 }
