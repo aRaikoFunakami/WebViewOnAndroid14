@@ -46,9 +46,11 @@ fun YoutubeIFrameWebView() {
                         margin: 0;
                         padding: 0;
                         overflow: hidden;
+                        background-color: #000000;
                     }
                     iframe {
                         width: 100%;
+                        height: 0%;
                         border: none;
                     }
                 </style>
@@ -63,7 +65,7 @@ fun YoutubeIFrameWebView() {
                 </script>
             </head>
             <body>
-                <iframe id="myIframe" src="https://www.youtube.com/embed/6n7KpRXgNFE?autoplay=1&enablejsapi=1" allowfullscreen></iframe>
+                <iframe id="myIframe" src="https://www.youtube.com/embed/6n7KpRXgNFE?autoplay=1&enablejsapi=1&controls=0" allowfullscreen></iframe>
             </body>
         </html>
     """.trimIndent()
